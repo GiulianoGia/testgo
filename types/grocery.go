@@ -13,3 +13,8 @@ type User struct {
 	Name string    `json: "name"`
 	Age  int       `json: "quantity"`
 }
+
+type UserGrocery struct {
+	UserID    int `gorm:"primaryKey"`
+	GroceryID int `gorm:"primaryKey"`
+}

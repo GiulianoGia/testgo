@@ -2,6 +2,7 @@ package main
 
 import (
 	"gotest/db"
+	"gotest/handler"
 	"gotest/middleware"
 	"log"
 	"net/http"
@@ -19,11 +20,18 @@ func main() {
 
 	router.Use(middleware.LoggerMiddleware)
 
-	router.Get("/groceries", AllGroceries)
-	router.Get("/groceries/{name}", FindAllGroceriesByName)
-	router.Post("/groceries", AddNewGrocery)
-	router.Put("/groceries", UpadteGroceryById)
-	router.Delete("/groceries/{id}", DeleteGrocery)
+	router.Get("/groceries", handler.AllGroceries)
+	router.Get("/groceries/{name}", handler.FindAllGroceriesByName)
+	router.Post("/groceries", handler.AddNewGrocery)
+	router.Put("/groceries", handler.UpadteGroceryById)
+	router.Delete("/groceries/{id}", handler.DeleteGrocery)
+
+	router.Group(func(r chi.Router) {
+		r.Use(middleware.BasicAuth)
+		r.Get("/users", handler.GetAllUsers)
+		r.Post("/users", handler.CreateNewUser)
+		r.Delete("/users/{name}", handler.DeleteUser)
+	})
 
 	log.Fatal(http.ListenAndServe(":8083", router))
 }

@@ -34,6 +34,7 @@ func initEnvVariables() {
 func autoMigrateStructs() {
 	DB.AutoMigrate(&types.Grocery{})
 	DB.AutoMigrate(&types.User{})
+	DB.AutoMigrate(&types.UserGrocery{})
 }
 
 func ConnectDB() *gorm.DB {

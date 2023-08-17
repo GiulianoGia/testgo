@@ -1,56 +1,55 @@
 package helper
 
 import (
+	"gotest/db"
 	"gotest/types"
-
-	"gorm.io/gorm"
 )
 
-func CreateGrocery(db *gorm.DB, grocery *types.Grocery) (err error) {
-	err = db.Create(grocery).Error
+func GetAllGroceries() (groceries []types.Grocery) {
+	var groceryList []types.Grocery
+	var err = db.DB.Find(&groceryList).Error
+	if err != nil {
+		return []types.Grocery{}
+	}
+	return groceryList
+}
+
+func CreateGrocery(grocery *types.Grocery) (err error) {
+	err = db.DB.Create(grocery).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetGroceryByName(db *gorm.DB, name string) (groceries []types.Grocery) {
+func GetGroceryByName(name string) (groceries []types.Grocery) {
 	var groceriesList = []types.Grocery{}
-	var err = db.Where("name = ?", name).Find(&groceriesList).Error
+	var err = db.DB.Where("name = ?", name).Find(&groceriesList).Error
 	if err != nil {
 		return []types.Grocery{}
 	}
 	return groceriesList
 }
 
-func UpdateGrocery(db *gorm.DB, grocery types.Grocery) (updatedGrocery types.Grocery) {
+func UpdateGrocery(grocery types.Grocery) (updatedGrocery types.Grocery, errStatus error) {
 	var newGrocery = types.Grocery{}
-	var err = db.Save(&grocery).Where("id = ?", grocery.ID).Find(&newGrocery).Error
+	var err = db.DB.Save(&grocery).Where("id = ?", grocery.ID).Find(&newGrocery).Error
 	if err != nil {
-		return types.Grocery{}
+		return types.Grocery{}, err
 	}
-	return newGrocery
+	return newGrocery, nil
 }
 
-func DeleteGroceryById(db *gorm.DB, id int) (grocery types.Grocery) {
+func DeleteGroceryById(id int) (grocery types.Grocery, errStatus error) {
 	var oldGrocery = types.Grocery{}
-	var err = db.Where("id = ?", id).Find(&oldGrocery).Error
+	var err = db.DB.Where("id = ?", id).Find(&oldGrocery).Error
 	if err != nil {
-		return types.Grocery{}
+		return types.Grocery{}, err
 	} else {
-		err = db.Delete(&oldGrocery).Error
+		err = db.DB.Delete(&oldGrocery).Error
 		if err != nil {
-			return types.Grocery{}
+			return types.Grocery{}, err
 		}
-		return oldGrocery
+		return oldGrocery, nil
 	}
-}
-
-func GetAllGroceries(db *gorm.DB) (groceries []types.Grocery) {
-	var groceryList []types.Grocery
-	var err = db.Find(&groceryList).Error
-	if err != nil {
-		return []types.Grocery{}
-	}
-	return groceryList
 }
