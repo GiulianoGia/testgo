@@ -1,6 +1,8 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type Grocery struct {
 	ID       uint   `gorm:"primaryKey"`
@@ -9,12 +11,13 @@ type Grocery struct {
 }
 
 type User struct {
-	ID   uuid.UUID `gorm:"primaryKey"`
-	Name string    `json: "name"`
-	Age  int       `json: "quantity"`
+	ID       uuid.UUID `gorm:"primaryKey"`
+	Name     string    `json: "name"`
+	Password string    `json: "password"`
+	Age      int       `json: "quantity"`
 }
 
 type UserGrocery struct {
-	UserID    int `gorm:"primaryKey"`
-	GroceryID int `gorm:"primaryKey"`
+	UserID    uuid.UUID `gorm:"primaryKey"`
+	GroceryID int       `gorm:"primaryKey"`
 }

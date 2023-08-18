@@ -23,8 +23,8 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 			red := color.New(color.BgRed)
 			red.Print(r.Method)
 		}
-		fmt.Print(" ", r.URL)
+		fmt.Println(" ", r.URL)
 		next.ServeHTTP(w, r)
-		fmt.Println("")
+		fmt.Println()
 	})
 }

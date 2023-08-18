@@ -2,27 +2,27 @@ package middleware
 
 import (
 	"crypto/sha256"
-	"crypto/subtle"
+	"encoding/base64"
 	"net/http"
 )
 
-func hashString(str string) []byte {
+func HashString(str string) string {
 	hash := sha256.New()
 	hash.Write([]byte(str))
-	return hash.Sum(nil)
+	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }
 
 func BasicAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
 		if ok {
-			usernameHash := hashString(username)
-			passwordHash := hashString(password)
-			expectedUsernameHash := hashString("test")
-			expectedPasswordHash := hashString("root")
+			usernameHash := HashString(username)
+			passwordHash := HashString(password)
+			expectedUsernameHash := HashString("test")
+			expectedPasswordHash := HashString("root")
 
-			usernameMatch := (subtle.ConstantTimeCompare(usernameHash, expectedUsernameHash) == 1)
-			passwordMatch := (subtle.ConstantTimeCompare(passwordHash, expectedPasswordHash) == 1)
+			usernameMatch := usernameHash == expectedUsernameHash
+			passwordMatch := passwordHash == expectedPasswordHash
 
 			if usernameMatch && passwordMatch {
 				next.ServeHTTP(w, r)

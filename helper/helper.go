@@ -14,10 +14,25 @@ func GetAllGroceries() (groceries []types.Grocery) {
 	return groceryList
 }
 
-func CreateGrocery(grocery *types.Grocery) (err error) {
-	err = db.DB.Create(grocery).Error
+func CreateGrocery(grocery *types.Grocery) (groceryNew *types.Grocery, err error) {
+	var newGrocery *types.Grocery
+	err = db.DB.Create(&grocery).Find(&newGrocery).Error
 	if err != nil {
-		return err
+		return newGrocery, err
+	}
+	return newGrocery, nil
+}
+
+func CreateGroceryForUser(username string, groceryId int) (err error) {
+	var user types.User
+	err = db.DB.Where("name = ?", username).First(&user).Error
+	if err != nil {
+		return
+	}
+	var userGrocery = types.UserGrocery{UserID: user.ID, GroceryID: groceryId}
+	err = db.DB.Create(&userGrocery).Error
+	if err != nil {
+		return
 	}
 	return nil
 }

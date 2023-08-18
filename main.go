@@ -3,6 +3,7 @@ package main
 import (
 	"gotest/db"
 	"gotest/handler"
+	auth "gotest/handler/auth"
 	"gotest/middleware"
 	"log"
 	"net/http"
@@ -27,8 +28,18 @@ func main() {
 	router.Delete("/groceries/{id}", handler.DeleteGrocery)
 
 	router.Group(func(r chi.Router) {
+		r.Get("/login", auth.LoginUser)
+		r.Post("/check", auth.CheckAuthentication)
+	})
+
+	router.Group(func(r chi.Router) {
+		r.Post("/me/grocery", handler.AddGroceryForUser)
+	})
+
+	router.Group(func(r chi.Router) {
 		r.Use(middleware.BasicAuth)
 		r.Get("/users", handler.GetAllUsers)
+		r.Get("/users/{name}", handler.GetSingleUser)
 		r.Post("/users", handler.CreateNewUser)
 		r.Delete("/users/{name}", handler.DeleteUser)
 	})

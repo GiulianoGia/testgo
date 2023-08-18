@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"gotest/helper"
+	"gotest/jwt"
 	"gotest/types"
 	"io"
 	"net/http"
@@ -36,13 +37,44 @@ func AddNewGrocery(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
-	err := helper.CreateGrocery(&grocery)
+	_, err := helper.CreateGrocery(&grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusCreated)
 	}
+}
+
+func AddGroceryForUser(w http.ResponseWriter, r *http.Request) {
+	// get username with the bearer token
+	token, err := jwt.GetTokenFromRequestHeader(r)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	username, err := jwt.GetUsernameFromToken(token)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	// get grocery from request body
+	reqBody, _ := io.ReadAll(r.Body)
+	var grocery types.Grocery
+	json.Unmarshal(reqBody, &grocery)
+	// create grocery
+	newGrocery, err := helper.CreateGrocery(&grocery)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	// create user_grocery
+	err = helper.CreateGroceryForUser(username, int(newGrocery.ID))
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusCreated)
 }
 
 func DeleteGrocery(w http.ResponseWriter, r *http.Request) {
