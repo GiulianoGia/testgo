@@ -3,6 +3,7 @@ version: '3'
 services:
   app:
     build: .
+    container_name: app
     ports:
       - "8080:8080"
     networks:
@@ -13,11 +14,13 @@ services:
         condition: service_healthy
   db:
     image: mysql:8.0
+    container_name: db
     networks:
       - myNetwork
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USERNAME}
+      MYSQL_ROOT_USER: ${DB_ROOT_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
@@ -26,6 +29,17 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
       retries: 10
+  phpmyadmin:
+    image: phpmyadmin:5.2.1
+    environment:
+      PMA_HOST: ${DB_HOST}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    restart: always
+    container_name: phpmyadmin
+    depends_on:
+       - db
+    ports:
+       - "8081:80"
 networks:
   myNetwork:
     driver: bridge

@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -46,8 +45,6 @@ func GetTokenFromRequestHeader(r *http.Request) (string, error) {
 }
 
 func GetUsernameFromToken(token string) (username string, err error) {
-	fmt.Println(token)
-
 	signKey, err := jwt.ParseWithClaims(
 		token,
 		&JWTCLAIM{},

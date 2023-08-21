@@ -47,7 +47,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	err := helper.DeleteUserByName(name)
+	_, err := helper.DeleteUserByName(name)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

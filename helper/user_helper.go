@@ -56,13 +56,13 @@ func UpdateUser(updatedUser types.User) (user types.User, err error) {
 	return newUser, nil
 }
 
-func DeleteUserByName(userName string) (err error) {
+func DeleteUserByName(userName string) (user types.User, err error) {
 	var deletedUser types.User
 	err = db.DB.Where("name = ?", userName).Find(&deletedUser).Delete(&deletedUser).Error
 	if err != nil {
-		return err
+		return types.User{}, err
 	} else if deletedUser.Age == 0 {
-		return &UserError{}
+		return types.User{}, &UserError{}
 	}
-	return nil
+	return deletedUser, nil
 }

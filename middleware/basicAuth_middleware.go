@@ -3,6 +3,7 @@ package middleware
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"gotest/jwt"
 	"net/http"
 )
 
@@ -31,5 +32,25 @@ func BasicAuth(next http.Handler) http.Handler {
 		}
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	})
+}
+
+func JWTAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := jwt.GetTokenFromRequestHeader(r)
+		if err != nil {
+			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		err = jwt.ValidateToken(token)
+		if err != nil {
+			w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		} else {
+			next.ServeHTTP(w, r)
+			return
+		}
 	})
 }

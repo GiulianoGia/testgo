@@ -37,6 +37,23 @@ func CreateGroceryForUser(username string, groceryId int) (err error) {
 	return nil
 }
 
+func DeleteGroceryForUser(username string, groceryId int) (err error) {
+	deletedGrocery, err := DeleteGroceryById(groceryId)
+	if err != nil {
+		return
+	}
+	user, err := GetUserByName(username)
+	if err != nil {
+		return
+	}
+	grocery := types.UserGrocery{UserID: user.ID, GroceryID: int(deletedGrocery.ID)}
+	err = db.DB.Delete(&grocery).Error
+	if err != nil {
+		return
+	}
+	return nil
+}
+
 func GetGroceryByName(name string) (groceries []types.Grocery) {
 	var groceriesList = []types.Grocery{}
 	var err = db.DB.Where("name = ?", name).Find(&groceriesList).Error
@@ -61,7 +78,7 @@ func DeleteGroceryById(id int) (grocery types.Grocery, errStatus error) {
 	if err != nil {
 		return types.Grocery{}, err
 	} else {
-		err = db.DB.Delete(&oldGrocery).Error
+		err = db.DB.Where("id = ?", id).Delete(&oldGrocery).Error
 		if err != nil {
 			return types.Grocery{}, err
 		}

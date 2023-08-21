@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"gotest/helper"
 	"gotest/jwt"
 	"gotest/types"
@@ -47,7 +48,6 @@ func AddNewGrocery(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddGroceryForUser(w http.ResponseWriter, r *http.Request) {
-	// get username with the bearer token
 	token, err := jwt.GetTokenFromRequestHeader(r)
 	if err != nil {
 		w.Header().Add("error", err.Error())
@@ -58,23 +58,47 @@ func AddGroceryForUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	// get grocery from request body
+
 	reqBody, _ := io.ReadAll(r.Body)
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
-	// create grocery
+
 	newGrocery, err := helper.CreateGrocery(&grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	// create user_grocery
+
 	err = helper.CreateGroceryForUser(username, int(newGrocery.ID))
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusCreated)
+}
+
+func DeleteGroceryFromUser(w http.ResponseWriter, r *http.Request) {
+	token, err := jwt.GetTokenFromRequestHeader(r)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	username, err := jwt.GetUsernameFromToken(token)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	id := chi.URLParam(r, "id")
+	convId, _ := strconv.Atoi(id)
+	fmt.Println(username, convId)
+	err = helper.DeleteGroceryForUser(username, convId)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func DeleteGrocery(w http.ResponseWriter, r *http.Request) {

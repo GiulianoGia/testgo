@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	godotenv.Load(".env")
+	godotenv.Load(".env.development")
 
 	db.InitDB()
 
@@ -34,6 +34,7 @@ func main() {
 
 	router.Group(func(r chi.Router) {
 		r.Post("/me/grocery", handler.AddGroceryForUser)
+		r.Delete("/me/grocery/{id}", handler.DeleteGroceryFromUser)
 	})
 
 	router.Group(func(r chi.Router) {
