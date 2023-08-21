@@ -23,6 +23,30 @@ func AllGroceries(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(groceryList)
 }
 
+func GetAllGroceriesFromUser(w http.ResponseWriter, r *http.Request) {
+	token, err := jwt.GetTokenFromRequestHeader(r)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	username, err := jwt.GetUsernameFromToken(token)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	userId, err := helper.GetUserIdByUsername(username)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	groceryList, err := helper.GetAllGroceriesFromUser(userId)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	json.NewEncoder(w).Encode(groceryList)
+}
+
 func FindAllGroceriesByName(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	groceries := helper.GetGroceryByName(name)
@@ -118,6 +142,20 @@ func UpadteGroceryById(w http.ResponseWriter, r *http.Request) {
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
 	newGrocery, err := helper.UpdateGrocery(grocery)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(newGrocery)
+}
+
+func UpdateStatusOfGrocery(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	status := r.FormValue("done")
+	convId, _ := strconv.Atoi(id)
+	convStatus, _ := strconv.ParseBool(status)
+	newGrocery, err := helper.UpdateStatusOfGrocery(convId, convStatus)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

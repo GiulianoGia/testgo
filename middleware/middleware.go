@@ -19,6 +19,9 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 		case "PUT":
 			blue := color.New(color.BgBlue)
 			blue.Print(r.Method)
+		case "PATCH":
+			magenta := color.New(color.BgMagenta)
+			magenta.Print(r.Method)
 		case "DELETE":
 			red := color.New(color.BgRed)
 			red.Print(r.Method)

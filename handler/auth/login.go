@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"gotest/db"
+	"gotest/helper"
 	"gotest/jwt"
 	"gotest/middleware"
 	"gotest/types"
@@ -40,6 +41,26 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(token)
 	}
+}
+
+func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	token, err := jwt.GetTokenFromRequestHeader(r)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	username, err := jwt.GetUsernameFromToken(token)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	user, err := helper.GetUserByName(username)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
 }
 
 func CheckAuthentication(w http.ResponseWriter, r *http.Request) {

@@ -20,6 +20,12 @@ func main() {
 	router := chi.NewRouter()
 
 	router.Use(middleware.LoggerMiddleware)
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			next.ServeHTTP(w, r)
+		})
+	})
 
 	router.Get("/groceries", handler.AllGroceries)
 	router.Get("/groceries/{name}", handler.FindAllGroceriesByName)
@@ -33,7 +39,10 @@ func main() {
 	})
 
 	router.Group(func(r chi.Router) {
+		r.Get("/me", auth.GetCurrentUser)
+		r.Get("/me/grocery", handler.GetAllGroceriesFromUser)
 		r.Post("/me/grocery", handler.AddGroceryForUser)
+		r.Patch("/me/grocery/{id}", handler.UpdateStatusOfGrocery)
 		r.Delete("/me/grocery/{id}", handler.DeleteGroceryFromUser)
 	})
 

@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"fmt"
 	"gotest/db"
 	"gotest/types"
 )
@@ -12,6 +13,32 @@ func GetAllGroceries() (groceries []types.Grocery) {
 		return []types.Grocery{}
 	}
 	return groceryList
+}
+
+func GetAllGroceriesFromUser(userId string) (groceries []types.Grocery, err error) {
+	var userGroceries []types.UserGrocery
+	err = db.DB.Where("user_id = ?", userId).Find(&userGroceries).Error
+	if err != nil {
+		return []types.Grocery{}, err
+	}
+	for _, userGrocery := range userGroceries {
+		var grocery types.Grocery
+		err = db.DB.Where("id = ?", userGrocery.GroceryID).Find(&grocery).Error
+		if err != nil {
+			return []types.Grocery{}, err
+		}
+		groceries = append(groceries, grocery)
+	}
+	return groceries, nil
+}
+
+func GetUserIdByUsername(username string) (userId string, err error) {
+	var user *types.User
+	err = db.DB.Where("name = ?", username).Find(&user).Error
+	if err != nil {
+		return "", err
+	}
+	return user.ID.String(), nil
 }
 
 func CreateGrocery(grocery *types.Grocery) (groceryNew *types.Grocery, err error) {
@@ -70,6 +97,16 @@ func UpdateGrocery(grocery types.Grocery) (updatedGrocery types.Grocery, errStat
 		return types.Grocery{}, err
 	}
 	return newGrocery, nil
+}
+
+func UpdateStatusOfGrocery(groceryId int, status bool) (newGrocery types.Grocery, err error) {
+	var grocery types.Grocery
+	fmt.Println(groceryId, status)
+	err = db.DB.Model(&types.Grocery{}).Where("id = ?", groceryId).Update("done", status).Find(&grocery).Error
+	if err != nil {
+		return types.Grocery{}, err
+	}
+	return grocery, nil
 }
 
 func DeleteGroceryById(id int) (grocery types.Grocery, errStatus error) {
