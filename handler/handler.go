@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"gotest/helper"
 	"gotest/jwt"
+	"gotest/service"
 	"gotest/types"
 	"io"
 	"net/http"
@@ -14,7 +14,7 @@ import (
 )
 
 func AllGroceries(w http.ResponseWriter, r *http.Request) {
-	var groceryList = helper.GetAllGroceries()
+	var groceryList = service.GetAllGroceries()
 	if len(groceryList) <= 0 {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
@@ -34,12 +34,12 @@ func GetAllGroceriesFromUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	userId, err := helper.GetUserIdByUsername(username)
+	userId, err := service.GetUserIdByUsername(username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	groceryList, err := helper.GetAllGroceriesFromUser(userId)
+	groceryList, err := service.GetAllGroceriesFromUser(userId)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -49,7 +49,7 @@ func GetAllGroceriesFromUser(w http.ResponseWriter, r *http.Request) {
 
 func FindAllGroceriesByName(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	groceries := helper.GetGroceryByName(name)
+	groceries := service.GetGroceryByName(name)
 	if len(groceries) <= 0 {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
@@ -62,7 +62,7 @@ func AddNewGrocery(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
-	_, err := helper.CreateGrocery(&grocery)
+	_, err := service.CreateGrocery(&grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -87,13 +87,13 @@ func AddGroceryForUser(w http.ResponseWriter, r *http.Request) {
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
 
-	newGrocery, err := helper.CreateGrocery(&grocery)
+	newGrocery, err := service.CreateGrocery(&grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	err = helper.CreateGroceryForUser(username, int(newGrocery.ID))
+	err = service.CreateGroceryForUser(username, int(newGrocery.ID))
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -117,7 +117,7 @@ func DeleteGroceryFromUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	convId, _ := strconv.Atoi(id)
 	fmt.Println(username, convId)
-	err = helper.DeleteGroceryForUser(username, convId)
+	err = service.DeleteGroceryForUser(username, convId)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -128,7 +128,7 @@ func DeleteGroceryFromUser(w http.ResponseWriter, r *http.Request) {
 func DeleteGrocery(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	convId, _ := strconv.Atoi(id)
-	deletedGrocery, err := helper.DeleteGroceryById(convId)
+	deletedGrocery, err := service.DeleteGroceryById(convId)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -141,7 +141,7 @@ func UpadteGroceryById(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
-	newGrocery, err := helper.UpdateGrocery(grocery)
+	newGrocery, err := service.UpdateGrocery(grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -155,7 +155,7 @@ func UpdateStatusOfGrocery(w http.ResponseWriter, r *http.Request) {
 	status := r.FormValue("done")
 	convId, _ := strconv.Atoi(id)
 	convStatus, _ := strconv.ParseBool(status)
-	newGrocery, err := helper.UpdateStatusOfGrocery(convId, convStatus)
+	newGrocery, err := service.UpdateStatusOfGrocery(convId, convStatus)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

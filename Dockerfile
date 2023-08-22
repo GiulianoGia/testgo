@@ -1,14 +1,10 @@
-# Use an official Golang runtime as a parent image
-FROM golang:1.17-alpine
-
+FROM golang:1.19 as builder
 WORKDIR /app
-
-COPY . /app
-
+COPY go.mod go.sum ./
 RUN go mod download
-
-RUN go build -o main .
-
-EXPOSE 8080
-
-CMD ["./main"]
+COPY ./ ./
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+RUN go build -o /goapp
+ENTRYPOINT ["/goapp"]

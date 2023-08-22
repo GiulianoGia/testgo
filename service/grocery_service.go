@@ -1,9 +1,10 @@
-package helper
+package service
 
 import (
 	"fmt"
 	"gotest/db"
 	"gotest/types"
+	"strings"
 )
 
 func GetAllGroceries() (groceries []types.Grocery) {
@@ -13,6 +14,18 @@ func GetAllGroceries() (groceries []types.Grocery) {
 		return []types.Grocery{}
 	}
 	return groceryList
+}
+
+func SearchGroceriesFromUser(query string) (groceriesList []types.Grocery) {
+	var groceries []types.Grocery
+	groceries = append(groceries, types.Grocery{ID: 1, Name: "Test", Quantity: 12, Done: false})
+	var groceriesLikeQuery []types.Grocery
+	for _, grocery := range groceries {
+		if strings.Contains(grocery.Name, query) {
+			groceriesLikeQuery = append(groceriesLikeQuery, grocery)
+		}
+	}
+	return groceriesLikeQuery
 }
 
 func GetAllGroceriesFromUser(userId string) (groceries []types.Grocery, err error) {

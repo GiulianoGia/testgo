@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"gotest/db"
-	"gotest/helper"
 	"gotest/jwt"
 	"gotest/middleware"
+	"gotest/service"
 	"gotest/types"
 	"io"
 	"net/http"
@@ -54,7 +54,7 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	user, err := helper.GetUserByName(username)
+	user, err := service.GetUserByName(username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

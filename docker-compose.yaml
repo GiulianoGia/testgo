@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   app:
@@ -8,10 +8,13 @@ services:
       - "8080:8080"
     networks:
       - myNetwork
-    env_file: .env
+    env_file: 
+      - .env
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+     - .:/go/src/app
   db:
     image: mysql:8.0
     container_name: db
@@ -25,21 +28,40 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
       - "3306:3306"
+    restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
       retries: 10
+    volumes:
+       - ./db-data:/var/lib/mysql
   phpmyadmin:
     image: phpmyadmin:5.2.1
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       PMA_HOST: ${DB_HOST}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    networks:
+      - myNetwork
     restart: always
     container_name: phpmyadmin
-    depends_on:
-       - db
     ports:
        - "8081:80"
+  reverse-proxy:
+    image: traefik:v2.10
+    networks:
+      - myNetwork
+    depends_on:
+      - db
+      - app
+      - phpmyadmin
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+
 networks:
   myNetwork:
     driver: bridge

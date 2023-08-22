@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"gotest/db"
 	"gotest/handler"
 	auth "gotest/handler/auth"
@@ -22,9 +23,13 @@ func main() {
 	router.Use(middleware.LoggerMiddleware)
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE")
 			next.ServeHTTP(w, r)
 		})
+	})
+
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode("Application is running!")
 	})
 
 	router.Get("/groceries", handler.AllGroceries)
