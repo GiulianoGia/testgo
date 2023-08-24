@@ -13,8 +13,12 @@ import (
 	"github.com/go-chi/chi"
 )
 
+var groceryService service.GroceryService
+var userService service.UserService
+
 func AllGroceries(w http.ResponseWriter, r *http.Request) {
-	var groceryList = service.GetAllGroceries()
+	fmt.Println(groceryService)
+	var groceryList = groceryService.GetAllGroceries()
 	if len(groceryList) <= 0 {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
@@ -34,12 +38,12 @@ func GetAllGroceriesFromUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	userId, err := service.GetUserIdByUsername(username)
+	userId, err := userService.GetUserIdByUsername(username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	groceryList, err := service.GetAllGroceriesFromUser(userId)
+	groceryList, err := groceryService.GetAllGroceriesFromUser(userId)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -49,7 +53,7 @@ func GetAllGroceriesFromUser(w http.ResponseWriter, r *http.Request) {
 
 func FindAllGroceriesByName(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	groceries := service.GetGroceryByName(name)
+	groceries := groceryService.GetGroceryByName(name)
 	if len(groceries) <= 0 {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
@@ -62,7 +66,7 @@ func AddNewGrocery(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
-	_, err := service.CreateGrocery(&grocery)
+	_, err := groceryService.CreateGrocery(&grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -87,13 +91,13 @@ func AddGroceryForUser(w http.ResponseWriter, r *http.Request) {
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
 
-	newGrocery, err := service.CreateGrocery(&grocery)
+	newGrocery, err := groceryService.CreateGrocery(&grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	err = service.CreateGroceryForUser(username, int(newGrocery.ID))
+	err = groceryService.CreateGroceryForUser(username, int(newGrocery.ID))
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -117,7 +121,7 @@ func DeleteGroceryFromUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	convId, _ := strconv.Atoi(id)
 	fmt.Println(username, convId)
-	err = service.DeleteGroceryForUser(username, convId)
+	err = groceryService.DeleteGroceryForUser(username, convId)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -128,7 +132,7 @@ func DeleteGroceryFromUser(w http.ResponseWriter, r *http.Request) {
 func DeleteGrocery(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	convId, _ := strconv.Atoi(id)
-	deletedGrocery, err := service.DeleteGroceryById(convId)
+	deletedGrocery, err := groceryService.DeleteGroceryById(convId)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -141,7 +145,7 @@ func UpadteGroceryById(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var grocery types.Grocery
 	json.Unmarshal(reqBody, &grocery)
-	newGrocery, err := service.UpdateGrocery(grocery)
+	newGrocery, err := groceryService.UpdateGrocery(grocery)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -155,7 +159,7 @@ func UpdateStatusOfGrocery(w http.ResponseWriter, r *http.Request) {
 	status := r.FormValue("done")
 	convId, _ := strconv.Atoi(id)
 	convStatus, _ := strconv.ParseBool(status)
-	newGrocery, err := service.UpdateStatusOfGrocery(convId, convStatus)
+	newGrocery, err := groceryService.UpdateStatusOfGrocery(convId, convStatus)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

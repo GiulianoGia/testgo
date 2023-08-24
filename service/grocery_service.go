@@ -1,3 +1,4 @@
+//go:generate mockery --name=GroceryServiceInterface
 package service
 
 import (
@@ -7,16 +8,43 @@ import (
 	"strings"
 )
 
-func GetAllGroceries() (groceries []types.Grocery) {
+type GroceryService struct {
+	groceryRepo db.GroceryRepository
+	userRepo    db.UserRepository
+}
+
+type GroceryServiceInterface interface {
+	GetAllGroceries() (groceries []types.Grocery)
+	SearchGroceriesFromUser(query string) (groceries []types.Grocery)
+	GetAllGroceriesFromUser(userId string) (groceries []types.Grocery, err error)
+	GetUserIdByUsername(username string) (userId string, err error)
+	CreateGroceryForUser(username string, groceryId int) (err error)
+	CreateGrocery(grocery *types.Grocery) (groceryNew types.Grocery, err error)
+	DeleteGroceryForUser(username string, groceryId int) (err error)
+	GetGroceryByName(name string) (groceries []types.Grocery)
+	UpdateGrocery(grocery types.Grocery) (updatedGrocery types.Grocery, errStatus error)
+	UpdateStatusOfGrocery(groceryId int, status bool) (newGrocery types.Grocery, err error)
+	DeleteGroceryById(id int) (grocery types.Grocery, errStatus error)
+}
+
+func NewGroceryService(ds *db.MariaDBDataStore, groceryRepo db.GroceryRepository, userRepo db.UserRepository) *GroceryService {
+	return &GroceryService{
+		groceryRepo: groceryRepo,
+		userRepo:    userRepo,
+	}
+}
+
+func (gs *GroceryService) GetAllGroceries() (groceries []types.Grocery) {
 	var groceryList []types.Grocery
-	var err = db.DB.Find(&groceryList).Error
+	groceryList, err := gs.groceryRepo.GetAllGroceries()
+	fmt.Printf("Hallo3 %v", groceryList)
 	if err != nil {
 		return []types.Grocery{}
 	}
 	return groceryList
 }
 
-func SearchGroceriesFromUser(query string) (groceriesList []types.Grocery) {
+func (gs *GroceryService) SearchGroceriesFromUser(query string) (groceriesList []types.Grocery) {
 	var groceries []types.Grocery
 	groceries = append(groceries, types.Grocery{ID: 1, Name: "Test", Quantity: 12, Done: false})
 	var groceriesLikeQuery []types.Grocery
@@ -28,15 +56,13 @@ func SearchGroceriesFromUser(query string) (groceriesList []types.Grocery) {
 	return groceriesLikeQuery
 }
 
-func GetAllGroceriesFromUser(userId string) (groceries []types.Grocery, err error) {
-	var userGroceries []types.UserGrocery
-	err = db.DB.Where("user_id = ?", userId).Find(&userGroceries).Error
+func (gs *GroceryService) GetAllGroceriesFromUser(userId string) (groceries []types.Grocery, err error) {
+	userGroceries, err := gs.groceryRepo.GetAllGroceriesFromUser(userId)
 	if err != nil {
 		return []types.Grocery{}, err
 	}
 	for _, userGrocery := range userGroceries {
-		var grocery types.Grocery
-		err = db.DB.Where("id = ?", userGrocery.GroceryID).Find(&grocery).Error
+		grocery, err := gs.groceryRepo.FindGroceryWithId(userGrocery.GroceryID)
 		if err != nil {
 			return []types.Grocery{}, err
 		}
@@ -45,93 +71,55 @@ func GetAllGroceriesFromUser(userId string) (groceries []types.Grocery, err erro
 	return groceries, nil
 }
 
-func GetUserIdByUsername(username string) (userId string, err error) {
-	var user *types.User
-	err = db.DB.Where("name = ?", username).Find(&user).Error
+func (gs *GroceryService) CreateGrocery(grocery *types.Grocery) (groceryNew types.Grocery, err error) {
+	newGrocery, err := gs.groceryRepo.CreateGrocery(*grocery)
 	if err != nil {
-		return "", err
+		return types.Grocery{}, err
 	}
-	return user.ID.String(), nil
+	return newGrocery, err
 }
 
-func CreateGrocery(grocery *types.Grocery) (groceryNew *types.Grocery, err error) {
-	var newGrocery *types.Grocery
-	err = db.DB.Create(&grocery).Find(&newGrocery).Error
+func (gs *GroceryService) CreateGroceryForUser(username string, groceryId int) (err error) {
+	user, err := gs.userRepo.GetUserByUsername(username)
 	if err != nil {
-		return newGrocery, err
+		return err
 	}
-	return newGrocery, nil
+	err = gs.groceryRepo.CreateGroceryForUser(user.ID, groceryId)
+	return err
 }
 
-func CreateGroceryForUser(username string, groceryId int) (err error) {
-	var user types.User
-	err = db.DB.Where("name = ?", username).First(&user).Error
+func (gs *GroceryService) DeleteGroceryForUser(username string, groceryId int) (err error) {
+	deletedGrocery, err := gs.DeleteGroceryById(groceryId)
 	if err != nil {
 		return
 	}
-	var userGrocery = types.UserGrocery{UserID: user.ID, GroceryID: groceryId}
-	err = db.DB.Create(&userGrocery).Error
+	user, err := gs.userRepo.GetUserByUsername(username)
 	if err != nil {
 		return
 	}
-	return nil
+	err = gs.groceryRepo.DeleteGroceryFromUser(user.ID, int(deletedGrocery.ID))
+	return err
 }
 
-func DeleteGroceryForUser(username string, groceryId int) (err error) {
-	deletedGrocery, err := DeleteGroceryById(groceryId)
-	if err != nil {
-		return
-	}
-	user, err := GetUserByName(username)
-	if err != nil {
-		return
-	}
-	grocery := types.UserGrocery{UserID: user.ID, GroceryID: int(deletedGrocery.ID)}
-	err = db.DB.Delete(&grocery).Error
-	if err != nil {
-		return
-	}
-	return nil
-}
-
-func GetGroceryByName(name string) (groceries []types.Grocery) {
-	var groceriesList = []types.Grocery{}
-	var err = db.DB.Where("name = ?", name).Find(&groceriesList).Error
+func (gs *GroceryService) GetGroceryByName(name string) (groceries []types.Grocery) {
+	groceriesList, err := gs.groceryRepo.GetGroceriesByName(name)
 	if err != nil {
 		return []types.Grocery{}
 	}
 	return groceriesList
 }
 
-func UpdateGrocery(grocery types.Grocery) (updatedGrocery types.Grocery, errStatus error) {
-	var newGrocery = types.Grocery{}
-	var err = db.DB.Save(&grocery).Where("id = ?", grocery.ID).Find(&newGrocery).Error
-	if err != nil {
-		return types.Grocery{}, err
-	}
-	return newGrocery, nil
+func (gs *GroceryService) UpdateGrocery(grocery types.Grocery) (updatedGrocery types.Grocery, errStatus error) {
+	updatedGrocery, err := gs.groceryRepo.UpdateGrocery(grocery)
+	return updatedGrocery, err
 }
 
-func UpdateStatusOfGrocery(groceryId int, status bool) (newGrocery types.Grocery, err error) {
-	var grocery types.Grocery
-	fmt.Println(groceryId, status)
-	err = db.DB.Model(&types.Grocery{}).Where("id = ?", groceryId).Update("done", status).Find(&grocery).Error
-	if err != nil {
-		return types.Grocery{}, err
-	}
-	return grocery, nil
+func (gs *GroceryService) UpdateStatusOfGrocery(groceryId int, status bool) (newGrocery types.Grocery, err error) {
+	grocery, err := gs.groceryRepo.UpdateStatusOfGrocery(groceryId, status)
+	return grocery, err
 }
 
-func DeleteGroceryById(id int) (grocery types.Grocery, errStatus error) {
-	var oldGrocery = types.Grocery{}
-	var err = db.DB.Where("id = ?", id).Find(&oldGrocery).Error
-	if err != nil {
-		return types.Grocery{}, err
-	} else {
-		err = db.DB.Where("id = ?", id).Delete(&oldGrocery).Error
-		if err != nil {
-			return types.Grocery{}, err
-		}
-		return oldGrocery, nil
-	}
+func (gs *GroceryService) DeleteGroceryById(id int) (grocery types.Grocery, errStatus error) {
+	oldGrocery, err := gs.groceryRepo.DeleteGrocery(id)
+	return oldGrocery, err
 }

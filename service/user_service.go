@@ -1,3 +1,4 @@
+//go:generate mockery --name=UserServiceInterface
 package service
 
 import (
@@ -10,33 +11,51 @@ import (
 
 type UserError struct{}
 
+type UserService struct {
+	userRepo db.UserRepository
+}
+
+type UserServiceInterface interface {
+	GetAllUsers() []types.User
+	GetUserIdByUsername(username string) (userId string, err error)
+	FindUserByUsernameAndPassword(username string, password string) (user types.User, err error)
+	CreateNewUser(user types.User) types.User
+	GetUserByName(name string) (user types.User, err error)
+	UpdateUser(updatedUser types.User) (user types.User, err error)
+	DeleteUserByName(username string) (user types.User, err error)
+}
+
+func NewUserService(ds *db.MariaDBDataStore, userRepo db.UserRepository) *UserService {
+	return &UserService{
+		userRepo: userRepo,
+	}
+}
+
 func (m *UserError) Error() string {
 	return "user not found"
 }
 
-func GetAllUsers() []types.User {
-	var usersList []types.User
-	var err = db.DB.Find(&usersList).Error
-	if err != nil {
-		return []types.User{}
-	}
+func (us *UserService) GetAllUsers() []types.User {
+	usersList := us.userRepo.GetAllUsers()
 	return usersList
 }
 
-func CreateNewUser(user types.User) types.User {
+func (us *UserService) GetUserIdByUsername(username string) (userId string, err error) {
+	var user types.User
+	user, err = us.userRepo.GetUserByUsername(username)
+	return user.ID.String(), err
+}
+
+func (us *UserService) CreateNewUser(user types.User) types.User {
 	var createdUser types.User
 	user.Password = string(middleware.HashString(user.Password))
 	user.ID = uuid.New()
-	err := db.DB.Create(user).Where("id", user.ID).Find(&createdUser).Error
-	if err != nil {
-		return types.User{}
-	}
+	createdUser = us.userRepo.CreateNewuser(user)
 	return createdUser
 }
 
-func GetUserByName(name string) (user types.User, err error) {
-	var userFound types.User
-	err = db.DB.Where("name = ?", name).Find(&userFound).Error
+func (us *UserService) GetUserByName(name string) (user types.User, err error) {
+	userFound, err := us.userRepo.GetUserByUsername(name)
 	if err != nil {
 		return types.User{}, err
 	} else if userFound.Name == "" {
@@ -45,9 +64,8 @@ func GetUserByName(name string) (user types.User, err error) {
 	return userFound, nil
 }
 
-func UpdateUser(updatedUser types.User) (user types.User, err error) {
-	var newUser types.User
-	err = db.DB.Save(&updatedUser).Where("id = ?", updatedUser.ID).Find(&newUser).Error
+func (us *UserService) UpdateUser(updatedUser types.User) (user types.User, err error) {
+	newUser, err := us.userRepo.UpdateUser(updatedUser)
 	if err != nil {
 		return types.User{}, err
 	} else if newUser.Name == "" {
@@ -56,9 +74,14 @@ func UpdateUser(updatedUser types.User) (user types.User, err error) {
 	return newUser, nil
 }
 
-func DeleteUserByName(userName string) (user types.User, err error) {
+func (us *UserService) FindUserByUsernameAndPassword(username string, password string) (user types.User, err error) {
+	user, err = us.userRepo.FindUserByUsernameAndPassword(username, password)
+	return
+}
+
+func (us *UserService) DeleteUserByName(username string) (user types.User, err error) {
 	var deletedUser types.User
-	err = db.DB.Where("name = ?", userName).Find(&deletedUser).Delete(&deletedUser).Error
+	err = us.userRepo.DeleteUserByName(username)
 	if err != nil {
 		return types.User{}, err
 	} else if deletedUser.Age == 0 {

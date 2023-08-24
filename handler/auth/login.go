@@ -3,11 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"gotest/db"
 	"gotest/jwt"
 	"gotest/middleware"
 	"gotest/service"
-	"gotest/types"
 	"io"
 	"net/http"
 )
@@ -16,6 +14,8 @@ type AuthCredentials struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+var userService service.UserService
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
@@ -54,7 +54,7 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	user, err := service.GetUserByName(username)
+	user, err := userService.GetUserByName(username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -79,8 +79,7 @@ func CheckAuthentication(w http.ResponseWriter, r *http.Request) {
 }
 
 func CheckUserCredentials(username string, password string) (authenticated bool, err error) {
-	var user types.User
-	err = db.DB.Where(&types.User{Name: username, Password: password}).Find(&user).Error
+	user, err := userService.FindUserByUsernameAndPassword(username, password)
 	if err != nil {
 		return
 	} else if user.Name == "" {

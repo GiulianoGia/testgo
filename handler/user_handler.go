@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"gotest/service"
 	"gotest/types"
 	"io"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	usersList := service.GetAllUsers()
+	usersList := userService.GetAllUsers()
 	json.NewEncoder(w).Encode(usersList)
 }
 
@@ -19,13 +18,13 @@ func CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var user types.User
 	json.Unmarshal(reqBody, &user)
-	userCreated := service.CreateNewUser(user)
+	userCreated := userService.CreateNewUser(user)
 	json.NewEncoder(w).Encode(userCreated)
 }
 
 func GetSingleUser(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	user, err := service.GetUserByName(name)
+	user, err := userService.GetUserByName(name)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -37,7 +36,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var updatedUser types.User
 	json.Unmarshal(reqBody, &updatedUser)
-	user, err := service.UpdateUser(updatedUser)
+	user, err := userService.UpdateUser(updatedUser)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -47,7 +46,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	_, err := service.DeleteUserByName(name)
+	_, err := userService.DeleteUserByName(name)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

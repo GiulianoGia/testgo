@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"gotest/config"
 	"gotest/db"
 	"gotest/handler"
 	auth "gotest/handler/auth"
@@ -16,7 +18,14 @@ import (
 func main() {
 	godotenv.Load(".env.development")
 
-	db.InitDB()
+	serverConfig := config.NewServerConfig(context.Background())
+	ds := db.NewMariaDBDataStore(serverConfig.DatabaseConnectionDetails)
+	/*
+		groceryService := service.GroceryService
+		userService := service.UserService
+
+		dbServiceContainer := service.NewContainer(ds, groceryService, userService)
+	*/
 
 	router := chi.NewRouter()
 
