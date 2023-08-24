@@ -25,7 +25,7 @@ func NewMariaDBDataStore(c config.MariaDBConfig) *MariaDBDataStore {
 	ds := MariaDBDataStore{}
 	var err error
 	ds.db, err = gorm.Open(mysql.Open(c.DSN()))
-	autoMigrateStructs(ds.db)
+	//autoMigrateStructs(ds.db)
 	if err != nil {
 		fmt.Errorf("Connection failed %v", err)
 	}

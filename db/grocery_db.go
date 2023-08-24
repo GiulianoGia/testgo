@@ -1,14 +1,13 @@
-//go:generate mockery --name=GroceryRepository
+//go:generate mockery --name=DataStore
 package db
 
 import (
-	"fmt"
 	"gotest/types"
 
 	"github.com/google/uuid"
 )
 
-type GroceryRepository interface {
+type DataStore interface {
 	GetAllGroceries() (groceries []types.Grocery, err error)
 	GetAllGroceriesFromUser(userId string) (userGroceries []types.UserGrocery, err error)
 	FindGroceryWithId(groceryId int) (grocery types.Grocery, err error)
@@ -19,15 +18,19 @@ type GroceryRepository interface {
 	UpdateGrocery(grocery types.Grocery) (newGrocery types.Grocery, err error)
 	UpdateStatusOfGrocery(groceryId int, status bool) (updatedGrocery types.Grocery, err error)
 	DeleteGrocery(groceryId int) (grocery types.Grocery, err error)
+	GetUserByUsername(username string) (user types.User, err error)
+	GetAllUsers() (userList []types.User)
+	CreateNewuser(user types.User) (createdUser types.User, er error)
+	UpdateUser(updatedUser types.User) (newUser types.User, err error)
+	DeleteUserByName(username string) (err error)
+	FindUserByUsernameAndPassword(username string, password string) (user types.User, err error)
 }
 
 func (ds *MariaDBDataStore) GetAllGroceries() (groceries []types.Grocery, err error) {
 	err = ds.db.Find(&groceries).Error
 	if err != nil {
-		fmt.Printf("Hallo1 %v", err)
 		return []types.Grocery{}, err
 	}
-	fmt.Printf("Hallo2 %v", groceries)
 	return
 }
 
@@ -40,7 +43,7 @@ func (ds *MariaDBDataStore) GetGroceriesByName(name string) (groceries []types.G
 	return groceriesList, nil
 }
 
-func (ds *MariaDBDataStore) GetGroceriesFromUser(userId string) (userGroceries []types.UserGrocery, err error) {
+func (ds *MariaDBDataStore) GetAllGroceriesFromUser(userId string) (userGroceries []types.UserGrocery, err error) {
 	err = ds.db.Where("user_id = ?", userId).Find(&userGroceries).Error
 	if err != nil {
 		return []types.UserGrocery{}, err

@@ -1,16 +1,6 @@
-//go:generate mockery --name=UserRepository
 package db
 
 import "gotest/types"
-
-type UserRepository interface {
-	GetUserByUsername(username string) (user types.User, err error)
-	GetAllUsers() (userList []types.User)
-	CreateNewuser(user types.User) (createdUser types.User)
-	UpdateUser(updatedUser types.User) (newUser types.User, err error)
-	DeleteUserByName(username string) (err error)
-	FindUserByUsernameAndPassword(username string, password string) (user types.User, err error)
-}
 
 func (ds *MariaDBDataStore) GetUserByUsername(username string) (user types.User, err error) {
 	err = ds.db.Where("name = ?", username).First(&user).Error

@@ -9,22 +9,22 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-	usersList := userService.GetAllUsers()
+func (api *APIHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	usersList := api.service.GetAllUsers()
 	json.NewEncoder(w).Encode(usersList)
 }
 
-func CreateNewUser(w http.ResponseWriter, r *http.Request) {
+func (api *APIHandler) CreateNewUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var user types.User
 	json.Unmarshal(reqBody, &user)
-	userCreated := userService.CreateNewUser(user)
+	userCreated := api.service.CreateNewUser(user)
 	json.NewEncoder(w).Encode(userCreated)
 }
 
-func GetSingleUser(w http.ResponseWriter, r *http.Request) {
+func (api *APIHandler) GetSingleUser(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	user, err := userService.GetUserByName(name)
+	user, err := api.service.GetUserByName(name)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -32,11 +32,11 @@ func GetSingleUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (api *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var updatedUser types.User
 	json.Unmarshal(reqBody, &updatedUser)
-	user, err := userService.UpdateUser(updatedUser)
+	user, err := api.service.UpdateUser(updatedUser)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -44,9 +44,9 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (api *APIHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	_, err := userService.DeleteUserByName(name)
+	_, err := api.service.DeleteUserByName(name)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

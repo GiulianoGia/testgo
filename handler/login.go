@@ -5,7 +5,6 @@ import (
 	"errors"
 	"gotest/jwt"
 	"gotest/middleware"
-	"gotest/service"
 	"io"
 	"net/http"
 )
@@ -15,14 +14,12 @@ type AuthCredentials struct {
 	Password string `json:"password"`
 }
 
-var userService service.UserService
-
-func LoginUser(w http.ResponseWriter, r *http.Request) {
+func (api *APIHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var userCredentials AuthCredentials
 	json.Unmarshal(reqBody, &userCredentials)
 	userCredentials.Password = string(middleware.HashString(userCredentials.Password))
-	isAuthenticated, err := CheckUserCredentials(userCredentials.Username, userCredentials.Password)
+	isAuthenticated, err := api.CheckUserCredentials(userCredentials.Username, userCredentials.Password)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -43,7 +40,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+func (api *APIHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	token, err := jwt.GetTokenFromRequestHeader(r)
 	if err != nil {
 		w.Header().Add("error", err.Error())
@@ -54,7 +51,7 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	user, err := userService.GetUserByName(username)
+	user, err := api.service.GetUserByName(username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -63,7 +60,7 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-func CheckAuthentication(w http.ResponseWriter, r *http.Request) {
+func (api *APIHandler) CheckAuthentication(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := jwt.GetTokenFromRequestHeader(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -78,8 +75,8 @@ func CheckAuthentication(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func CheckUserCredentials(username string, password string) (authenticated bool, err error) {
-	user, err := userService.FindUserByUsernameAndPassword(username, password)
+func (api *APIHandler) CheckUserCredentials(username string, password string) (authenticated bool, err error) {
+	user, err := api.service.FindUserByUsernameAndPassword(username, password)
 	if err != nil {
 		return
 	} else if user.Name == "" {

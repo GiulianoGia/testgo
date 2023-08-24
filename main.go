@@ -6,8 +6,8 @@ import (
 	"gotest/config"
 	"gotest/db"
 	"gotest/handler"
-	auth "gotest/handler/auth"
 	"gotest/middleware"
+	"gotest/service"
 	"log"
 	"net/http"
 
@@ -20,12 +20,8 @@ func main() {
 
 	serverConfig := config.NewServerConfig(context.Background())
 	ds := db.NewMariaDBDataStore(serverConfig.DatabaseConnectionDetails)
-	/*
-		groceryService := service.GroceryService
-		userService := service.UserService
-
-		dbServiceContainer := service.NewContainer(ds, groceryService, userService)
-	*/
+	service := service.NewServiceStruct(ds)
+	apiHandler := handler.NewAPIHandler(service)
 
 	router := chi.NewRouter()
 
@@ -41,31 +37,31 @@ func main() {
 		json.NewEncoder(w).Encode("Application is running!")
 	})
 
-	router.Get("/groceries", handler.AllGroceries)
-	router.Get("/groceries/{name}", handler.FindAllGroceriesByName)
-	router.Post("/groceries", handler.AddNewGrocery)
-	router.Put("/groceries", handler.UpadteGroceryById)
-	router.Delete("/groceries/{id}", handler.DeleteGrocery)
+	router.Get("/groceries", apiHandler.AllGroceries)
+	router.Get("/groceries/{name}", apiHandler.FindAllGroceriesByName)
+	router.Post("/groceries", apiHandler.AddNewGrocery)
+	router.Put("/groceries", apiHandler.UpadteGroceryById)
+	router.Delete("/groceries/{id}", apiHandler.DeleteGrocery)
 
 	router.Group(func(r chi.Router) {
-		r.Get("/login", auth.LoginUser)
-		r.Post("/check", auth.CheckAuthentication)
+		r.Get("/login", apiHandler.LoginUser)
+		r.Post("/check", apiHandler.CheckAuthentication)
 	})
 
 	router.Group(func(r chi.Router) {
-		r.Get("/me", auth.GetCurrentUser)
-		r.Get("/me/grocery", handler.GetAllGroceriesFromUser)
-		r.Post("/me/grocery", handler.AddGroceryForUser)
-		r.Patch("/me/grocery/{id}", handler.UpdateStatusOfGrocery)
-		r.Delete("/me/grocery/{id}", handler.DeleteGroceryFromUser)
+		r.Get("/me", apiHandler.GetCurrentUser)
+		r.Get("/me/grocery", apiHandler.GetAllGroceriesFromUser)
+		r.Post("/me/grocery", apiHandler.AddGroceryForUser)
+		r.Patch("/me/grocery/{id}", apiHandler.UpdateStatusOfGrocery)
+		r.Delete("/me/grocery/{id}", apiHandler.DeleteGroceryFromUser)
 	})
 
 	router.Group(func(r chi.Router) {
 		r.Use(middleware.BasicAuth)
-		r.Get("/users", handler.GetAllUsers)
-		r.Get("/users/{name}", handler.GetSingleUser)
-		r.Post("/users", handler.CreateNewUser)
-		r.Delete("/users/{name}", handler.DeleteUser)
+		r.Get("/users", apiHandler.GetAllUsers)
+		r.Get("/users/{name}", apiHandler.GetSingleUser)
+		r.Post("/users", apiHandler.CreateNewUser)
+		r.Delete("/users/{name}", apiHandler.DeleteUser)
 	})
 
 	log.Fatal(http.ListenAndServe(":8083", router))
