@@ -20,6 +20,7 @@ func (api *APIHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(reqBody, &userCredentials)
 	userCredentials.Password = string(middleware.HashString(userCredentials.Password))
 	isAuthenticated, err := api.CheckUserCredentials(userCredentials.Username, userCredentials.Password)
+	roleId, err := api.service.GetRoleIdByName(userCredentials.Username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -30,7 +31,7 @@ func (api *APIHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	token, err := jwt.GenerateJWT(userCredentials.Username)
+	token, err := jwt.GenerateJWT(userCredentials.Username, roleId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

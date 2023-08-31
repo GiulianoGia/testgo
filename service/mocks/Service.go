@@ -225,6 +225,30 @@ func (_m *Service) GetGroceryByName(name string) []types.Grocery {
 	return r0
 }
 
+// GetRoleIdByName provides a mock function with given fields: username
+func (_m *Service) GetRoleIdByName(username string) (int, error) {
+	ret := _m.Called(username)
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (int, error)); ok {
+		return rf(username)
+	}
+	if rf, ok := ret.Get(0).(func(string) int); ok {
+		r0 = rf(username)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(username)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUserByName provides a mock function with given fields: name
 func (_m *Service) GetUserByName(name string) (types.User, error) {
 	ret := _m.Called(name)

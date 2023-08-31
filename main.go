@@ -49,6 +49,7 @@ func main() {
 	})
 
 	router.Group(func(r chi.Router) {
+		r.Use(middleware.JWTAuth)
 		r.Get("/me", apiHandler.GetCurrentUser)
 		r.Get("/me/grocery", apiHandler.GetAllGroceriesFromUser)
 		r.Post("/me/grocery", apiHandler.AddGroceryForUser)
@@ -57,7 +58,7 @@ func main() {
 	})
 
 	router.Group(func(r chi.Router) {
-		r.Use(middleware.BasicAuth)
+		r.Use(middleware.AdminMiddleware)
 		r.Get("/users", apiHandler.GetAllUsers)
 		r.Get("/users/{name}", apiHandler.GetSingleUser)
 		r.Post("/users", apiHandler.CreateNewUser)

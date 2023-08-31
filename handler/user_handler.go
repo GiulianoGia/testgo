@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"gotest/types"
 	"io"
 	"net/http"
@@ -47,9 +48,11 @@ func (api *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 func (api *APIHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	_, err := api.service.DeleteUserByName(name)
+	fmt.Println(err)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 }

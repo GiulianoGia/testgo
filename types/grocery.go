@@ -1,24 +1,11 @@
 package types
 
-import (
-	"github.com/google/uuid"
-)
+import "gorm.io/gorm"
 
 type Grocery struct {
+	gorm.Model
 	ID       uint   `gorm:"primaryKey"`
 	Name     string `json: "name"`
 	Quantity int    `json: "quantity"`
 	Done     bool   `json: "done"`
-}
-
-type User struct {
-	ID       uuid.UUID `gorm:"primaryKey"`
-	Name     string    `json: "name"`
-	Password string    `json: "password"`
-	Age      int       `json: "quantity"`
-}
-
-type UserGrocery struct {
-	UserID    uuid.UUID `gorm:"primaryKey"`
-	GroceryID int       `gorm:"primaryKey"`
 }

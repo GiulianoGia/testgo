@@ -116,17 +116,27 @@ func (_m *DataStore) DeleteGroceryFromUser(userId uuid.UUID, groceryId int) erro
 }
 
 // DeleteUserByName provides a mock function with given fields: username
-func (_m *DataStore) DeleteUserByName(username string) error {
+func (_m *DataStore) DeleteUserByName(username string) (types.User, error) {
 	ret := _m.Called(username)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
+	var r0 types.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (types.User, error)); ok {
+		return rf(username)
+	}
+	if rf, ok := ret.Get(0).(func(string) types.User); ok {
 		r0 = rf(username)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(types.User)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(username)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // FindGroceryWithId provides a mock function with given fields: groceryId
@@ -264,6 +274,30 @@ func (_m *DataStore) GetGroceriesByName(name string) ([]types.Grocery, error) {
 
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetRoleIdByName provides a mock function with given fields: username
+func (_m *DataStore) GetRoleIdByName(username string) (int, error) {
+	ret := _m.Called(username)
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (int, error)); ok {
+		return rf(username)
+	}
+	if rf, ok := ret.Get(0).(func(string) int); ok {
+		r0 = rf(username)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(username)
 	} else {
 		r1 = ret.Error(1)
 	}

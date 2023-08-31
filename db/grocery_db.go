@@ -22,8 +22,9 @@ type DataStore interface {
 	GetAllUsers() (userList []types.User)
 	CreateNewuser(user types.User) (createdUser types.User, er error)
 	UpdateUser(updatedUser types.User) (newUser types.User, err error)
-	DeleteUserByName(username string) (err error)
+	DeleteUserByName(username string) (deletedUser types.User, err error)
 	FindUserByUsernameAndPassword(username string, password string) (user types.User, err error)
+	GetRoleIdByName(username string) (roleId int, err error)
 }
 
 func (ds *MariaDBDataStore) GetAllGroceries() (groceries []types.Grocery, err error) {

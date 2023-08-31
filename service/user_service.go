@@ -33,6 +33,7 @@ type Service interface {
 	UpdateGrocery(grocery types.Grocery) (updatedGrocery types.Grocery, errStatus error)
 	UpdateStatusOfGrocery(groceryId int, status bool) (newGrocery types.Grocery, err error)
 	DeleteGroceryById(id int) (grocery types.Grocery, errStatus error)
+	GetRoleIdByName(username string) (roleId int, err error)
 }
 
 func NewServiceStruct(dataStore db.DataStore) *ServiceStruct {
@@ -60,6 +61,7 @@ func (us *ServiceStruct) CreateNewUser(user types.User) types.User {
 	var createdUser types.User
 	user.Password = string(middleware.HashString(user.Password))
 	user.ID = uuid.New()
+	user.RoleID = 2
 	createdUser, _ = us.dataStore.CreateNewuser(user)
 	return createdUser
 }
@@ -91,11 +93,16 @@ func (us *ServiceStruct) FindUserByUsernameAndPassword(username string, password
 
 func (us *ServiceStruct) DeleteUserByName(username string) (user types.User, err error) {
 	var deletedUser types.User
-	err = us.dataStore.DeleteUserByName(username)
+	deletedUser, err = us.dataStore.DeleteUserByName(username)
 	if err != nil {
 		return types.User{}, err
 	} else if deletedUser.Age == 0 {
 		return types.User{}, &UserError{}
 	}
 	return deletedUser, nil
+}
+
+func (us *ServiceStruct) GetRoleIdByName(username string) (roleId int, err error) {
+	roleId, err = us.dataStore.GetRoleIdByName(username)
+	return
 }

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"gotest/jwt"
 	"gotest/service"
 	"gotest/types"
@@ -23,24 +22,6 @@ func NewAPIHandler(service service.Service) *APIHandler {
 	}
 }
 
-/*
-type Handler interface {
-	AllGroceries(w http.ResponseWriter, r *http.Request)
-	GetAllGroceriesFromUser(w http.ResponseWriter, r *http.Request)
-	FindAllGroceriesByName(w http.ResponseWriter, r *http.Request)
-	AddNewGrocery(w http.ResponseWriter, r *http.Request)
-	DeleteGroceryFromUser(w http.ResponseWriter, r *http.Request)
-	DeleteGrocery(w http.ResponseWriter, r *http.Request)
-	UpadteGroceryById(w http.ResponseWriter, r *http.Request)
-	UpdateStatusOfGrocery(w http.ResponseWriter, r *http.Request)
-	GetAllUsers(w http.ResponseWriter, r *http.Request)
-	CreateNewUser(w http.ResponseWriter, r *http.Request)
-	GetSingleUser(w http.ResponseWriter, r *http.Request)
-	UpdateUser(w http.ResponseWriter, r *http.Request)
-	DeleteUser(w http.ResponseWriter, r *http.Request)
-}
-*/
-
 func (api *APIHandler) AllGroceries(w http.ResponseWriter, r *http.Request) {
 	var groceryList = api.service.GetAllGroceries()
 	if len(groceryList) <= 0 {
@@ -56,21 +37,29 @@ func (api *APIHandler) GetAllGroceriesFromUser(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	username, err := jwt.GetUsernameFromToken(token)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	userId, err := api.service.GetUserIdByUsername(username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	groceryList, err := api.service.GetAllGroceriesFromUser(userId)
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if len(groceryList) <= 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 	json.NewEncoder(w).Encode(groceryList)
 }
@@ -144,7 +133,6 @@ func (api *APIHandler) DeleteGroceryFromUser(w http.ResponseWriter, r *http.Requ
 	}
 	id := chi.URLParam(r, "id")
 	convId, _ := strconv.Atoi(id)
-	fmt.Println(username, convId)
 	err = api.service.DeleteGroceryForUser(username, convId)
 	if err != nil {
 		w.Header().Add("error", err.Error())

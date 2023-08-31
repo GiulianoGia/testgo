@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"gotest/types"
 	"net/http"
 	"os"
 	"strings"
@@ -14,13 +15,15 @@ var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
 type JWTCLAIM struct {
 	Username string `json:"username"`
+	Role     int    `json:"role"`
 	jwt.StandardClaims
 }
 
-func GenerateJWT(username string) (tokenString string, err error) {
+func GenerateJWT(username string, roleId int) (tokenString string, err error) {
 	experationTime := time.Now().Add(1 * time.Hour)
 	claims := &JWTCLAIM{
 		Username: username,
+		Role:     roleId,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: experationTime.Unix(),
 		},
@@ -61,6 +64,25 @@ func GetUsernameFromToken(token string) (username string, err error) {
 		return "", err
 	}
 	return claims.Username, nil
+}
+
+func GetRoleFromToken(token string) (role string, err error) {
+	signkey, err := jwt.ParseWithClaims(
+		token,
+		&JWTCLAIM{},
+		func(t *jwt.Token) (interface{}, error) {
+			return []byte(jwtKey), nil
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+	claims, ok := signkey.Claims.(*JWTCLAIM)
+	if !ok {
+		err := errors.New("couldn't get claims")
+		return "", err
+	}
+	return types.GetRole(types.RoleEnum(claims.Role)), nil
 }
 
 func ValidateToken(signedToken string) (err error) {

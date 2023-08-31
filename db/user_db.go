@@ -1,6 +1,8 @@
 package db
 
-import "gotest/types"
+import (
+	"gotest/types"
+)
 
 func (ds *MariaDBDataStore) GetUserByUsername(username string) (user types.User, err error) {
 	err = ds.db.Where("name = ?", username).First(&user).Error
@@ -11,8 +13,7 @@ func (ds *MariaDBDataStore) GetUserByUsername(username string) (user types.User,
 }
 
 func (ds *MariaDBDataStore) GetAllUsers() (userList []types.User) {
-	var usersList []types.User
-	var err = ds.db.Find(&usersList).Error
+	var err = ds.db.Preload("Role").Find(&userList).Error
 	if err != nil {
 		return []types.User{}
 	}
@@ -43,8 +44,16 @@ func (ds *MariaDBDataStore) UpdateUser(updatedUser types.User) (newUser types.Us
 	return newUser, nil
 }
 
-func (ds *MariaDBDataStore) DeleteUserByName(username string) (err error) {
-	var deletedUser types.User
+func (ds *MariaDBDataStore) DeleteUserByName(username string) (deletedUser types.User, err error) {
 	err = ds.db.Where("name = ?", username).Find(&deletedUser).Delete(&deletedUser).Error
-	return err
+	return
+}
+
+func (ds *MariaDBDataStore) GetRoleIdByName(username string) (roleId int, err error) {
+	var user types.User
+	err = ds.db.Where("name = ?", username).Find(&user).Error
+	if err != nil {
+		return 0, err
+	}
+	return user.Role.ID, nil
 }
