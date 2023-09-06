@@ -29,8 +29,23 @@ func (api *APIHandler) GetSingleUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	json.NewEncoder(w).Encode(user)
+}
+
+func (api *APIHandler) GetUserByRole(w http.ResponseWriter, r *http.Request) {
+	role := chi.URLParam(r, "role")
+	users, err := api.service.GetUserByRole(role)
+	if err != nil {
+		w.Header().Add("error", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else if len(users) <= 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(users)
 }
 
 func (api *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +56,7 @@ func (api *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Add("error", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	json.NewEncoder(w).Encode(user)
 }

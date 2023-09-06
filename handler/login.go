@@ -5,6 +5,7 @@ import (
 	"errors"
 	"gotest/jwt"
 	"gotest/middleware"
+	"gotest/types"
 	"io"
 	"net/http"
 )
@@ -14,12 +15,22 @@ type AuthCredentials struct {
 	Password string `json:"password"`
 }
 
+type RegisterCredentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Age      int    `json:"age"`
+}
+
 func (api *APIHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var userCredentials AuthCredentials
 	json.Unmarshal(reqBody, &userCredentials)
 	userCredentials.Password = string(middleware.HashString(userCredentials.Password))
 	isAuthenticated, err := api.CheckUserCredentials(userCredentials.Username, userCredentials.Password)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	roleId, err := api.service.GetRoleIdByName(userCredentials.Username)
 	if err != nil {
 		w.Header().Add("error", err.Error())
@@ -39,6 +50,33 @@ func (api *APIHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(token)
 	}
+}
+
+func mapUser(userCredentials RegisterCredentials) (user types.User) {
+	user.Name = userCredentials.Username
+	user.Age = userCredentials.Age
+	user.Password = userCredentials.Password
+	return
+}
+
+func (api *APIHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := io.ReadAll(r.Body)
+	var userCredentials RegisterCredentials
+	json.Unmarshal(reqBody, &userCredentials)
+	user := mapUser(userCredentials)
+	if user.Name != "" && user.Password != "" {
+		user = api.service.CreateNewUser(user)
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	token, err := jwt.GenerateJWT(user.Name, user.RoleID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(token)
 }
 
 func (api *APIHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {

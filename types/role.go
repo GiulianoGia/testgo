@@ -25,3 +25,14 @@ func GetRole(r RoleEnum) string {
 		return "unkown"
 	}
 }
+
+func GetRoleId(r string) int {
+	switch r {
+	case "Admin":
+		return 1
+	case "Member":
+		return 2
+	default:
+		return 0
+	}
+}

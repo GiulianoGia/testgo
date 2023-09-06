@@ -2,6 +2,7 @@
 package service
 
 import (
+	"fmt"
 	"gotest/db"
 	"gotest/middleware"
 	"gotest/types"
@@ -34,6 +35,7 @@ type Service interface {
 	UpdateStatusOfGrocery(groceryId int, status bool) (newGrocery types.Grocery, err error)
 	DeleteGroceryById(id int) (grocery types.Grocery, errStatus error)
 	GetRoleIdByName(username string) (roleId int, err error)
+	GetUserByRole(role string) (users []types.User, err error)
 }
 
 func NewServiceStruct(dataStore db.DataStore) *ServiceStruct {
@@ -62,6 +64,7 @@ func (us *ServiceStruct) CreateNewUser(user types.User) types.User {
 	user.Password = string(middleware.HashString(user.Password))
 	user.ID = uuid.New()
 	user.RoleID = 2
+	fmt.Println(user)
 	createdUser, _ = us.dataStore.CreateNewuser(user)
 	return createdUser
 }
@@ -74,6 +77,14 @@ func (us *ServiceStruct) GetUserByName(name string) (user types.User, err error)
 		return types.User{}, &UserError{}
 	}
 	return userFound, nil
+}
+
+func (us *ServiceStruct) GetUserByRole(role string) (users []types.User, err error) {
+	users, err = us.dataStore.GetUserByRole(role)
+	if err != nil {
+		return []types.User{}, err
+	}
+	return users, err
 }
 
 func (us *ServiceStruct) UpdateUser(updatedUser types.User) (user types.User, err error) {

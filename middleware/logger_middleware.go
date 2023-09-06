@@ -31,3 +31,10 @@ func LoggerMiddleware(next http.Handler) http.Handler {
 		fmt.Println()
 	})
 }
+
+func MethodMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE")
+		next.ServeHTTP(w, r)
+	})
+}
