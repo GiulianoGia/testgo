@@ -1,11 +1,8 @@
 package types
 
-import "gorm.io/gorm"
-
 type Role struct {
-	gorm.Model
 	ID   int    `gorm:"primaryKey"`
-	Name string `json: "name"`
+	Name string `json:"name"`
 }
 
 type RoleEnum int

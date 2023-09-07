@@ -12,6 +12,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -25,6 +26,15 @@ func main() {
 
 	router := chi.NewRouter()
 
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
+
 	router.Use(middleware.LoggerMiddleware)
 	router.Use(middleware.MethodMiddleware)
 
@@ -33,7 +43,7 @@ func main() {
 	})
 
 	router.Group(func(r chi.Router) {
-		r.Get("/login", apiHandler.LoginUser)
+		r.Post("/login", apiHandler.LoginUser)
 		r.Post("/register", apiHandler.RegisterUser)
 		r.Post("/check", apiHandler.CheckAuthentication)
 	})
@@ -41,10 +51,10 @@ func main() {
 	router.Group(func(r chi.Router) {
 		r.Use(middleware.JWTAuth)
 		r.Get("/me", apiHandler.GetCurrentUser)
-		r.Get("/me/grocery", apiHandler.GetAllGroceriesFromUser)
-		r.Post("/me/grocery", apiHandler.AddGroceryForUser)
-		r.Patch("/me/grocery/{id}", apiHandler.UpdateStatusOfGrocery)
-		r.Delete("/me/grocery/{id}", apiHandler.DeleteGroceryFromUser)
+		r.Get("/me/groceries", apiHandler.GetAllGroceriesFromUser)
+		r.Post("/me/groceries", apiHandler.AddGroceryForUser)
+		r.Patch("/me/groceries/{id}", apiHandler.UpdateStatusOfGrocery)
+		r.Delete("/me/groceries/{id}", apiHandler.DeleteGroceryFromUser)
 		r.Get("/groceries", apiHandler.AllGroceries)
 		r.Get("/groceries/{name}", apiHandler.FindAllGroceriesByName)
 		r.Post("/groceries", apiHandler.AddNewGrocery)

@@ -5,6 +5,7 @@ go 1.20
 require gorm.io/driver/mysql v1.5.1
 
 require (
+	github.com/go-chi/cors v1.2.1 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

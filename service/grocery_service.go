@@ -59,15 +59,15 @@ func (gs *ServiceStruct) CreateGroceryForUser(username string, groceryId int) (e
 }
 
 func (gs *ServiceStruct) DeleteGroceryForUser(username string, groceryId int) (err error) {
-	deletedGrocery, err := gs.DeleteGroceryById(groceryId)
-	if err != nil {
-		return
-	}
 	user, err := gs.dataStore.GetUserByUsername(username)
 	if err != nil {
 		return
 	}
-	err = gs.dataStore.DeleteGroceryFromUser(user.ID, int(deletedGrocery.ID))
+	err = gs.dataStore.DeleteGroceryFromUser(user.ID, groceryId)
+	if err != nil {
+		return
+	}
+	_, err = gs.DeleteGroceryById(groceryId)
 	return err
 }
 

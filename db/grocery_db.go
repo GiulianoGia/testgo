@@ -92,8 +92,11 @@ func (ds *MariaDBDataStore) CreateGroceryForUser(userId uuid.UUID, groceryId int
 }
 
 func (ds *MariaDBDataStore) DeleteGroceryFromUser(userId uuid.UUID, groceryId int) (err error) {
-	grocery := types.UserGrocery{UserID: userId, GroceryID: groceryId}
-	err = ds.db.Delete(&grocery).Error
+	userGrocery := types.UserGrocery{UserID: userId, GroceryID: groceryId}
+	err = ds.db.Delete(&userGrocery).Error
+	if err != nil {
+		return
+	}
 	return
 }
 

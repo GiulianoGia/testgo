@@ -2,7 +2,6 @@
 package service
 
 import (
-	"fmt"
 	"gotest/db"
 	"gotest/middleware"
 	"gotest/types"
@@ -64,7 +63,6 @@ func (us *ServiceStruct) CreateNewUser(user types.User) types.User {
 	user.Password = string(middleware.HashString(user.Password))
 	user.ID = uuid.New()
 	user.RoleID = 2
-	fmt.Println(user)
 	createdUser, _ = us.dataStore.CreateNewuser(user)
 	return createdUser
 }

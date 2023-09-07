@@ -5,10 +5,10 @@ import (
 )
 
 type User struct {
-	ID       uuid.UUID `gorm:"primaryKey"`
-	Name     string    `json: "name"`
-	Password string    `json: "password"`
-	Age      int       `json: "age"`
+	ID       uuid.UUID `gorm:"primary_key" json:"id"`
+	Name     string    `json:"name"`
+	Password string    `json:"password"`
+	Age      int       `json:"age"`
 	RoleID   int
 	Role     Role
 }
